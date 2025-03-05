@@ -54,19 +54,26 @@ export function PushNotificationManager() {
       ),
     });
     setSubscription(sub);
-    await subscribeUser(
+    const result = await subscribeUser(
       JSON.parse(JSON.stringify(sub.toJSON())) as WebPushSubscription,
     );
+
+    if (result.subscriptionId) {
+      localStorage.setItem("subscriptionId", result.subscriptionId.toString());
+    }
   }
   async function unsubscribeFromPush() {
     await subscription?.unsubscribe();
     setSubscription(null);
-    await unsubscribeUser();
+    const subId = parseInt(localStorage.getItem("subscriptionId") ?? "");
+    if (isNaN(subId)) return;
+    await unsubscribeUser(subId);
   }
 
   async function sendTestNotification() {
     if (subscription) {
-      await sendPushNotification(message);
+      const result = await sendPushNotification(message);
+      console.log(result);
       setMessage("");
     }
   }
@@ -76,24 +83,44 @@ export function PushNotificationManager() {
   }
 
   return (
-    <div>
-      <h3>Push Notifications</h3>
+    <div className="rounded-lg bg-gray-100 p-4 shadow-md">
+      <h3 className="mb-2 text-lg font-semibold">Push Notifications</h3>
       {subscription ? (
         <>
-          <p>You are subscribed to push notifications.</p>
-          <button onClick={unsubscribeFromPush}>Unsubscribe</button>
+          <p className="mb-2 text-green-600">
+            You are subscribed to push notifications.
+          </p>
+          <button
+            onClick={unsubscribeFromPush}
+            className="mb-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+          >
+            Unsubscribe
+          </button>
           <input
             type="text"
             placeholder="Enter notification message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            className="mb-2 w-full rounded border border-gray-300 p-2"
           />
-          <button onClick={sendTestNotification}>Send Test</button>
+          <button
+            onClick={sendTestNotification}
+            className="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+          >
+            Send Test
+          </button>
         </>
       ) : (
         <>
-          <p>You are not subscribed to push notifications.</p>
-          <button onClick={subscribeToPush}>Subscribe</button>
+          <p className="mb-2 text-red-600">
+            You are not subscribed to push notifications.
+          </p>
+          <button
+            onClick={subscribeToPush}
+            className="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+          >
+            Subscribe
+          </button>
         </>
       )}
     </div>

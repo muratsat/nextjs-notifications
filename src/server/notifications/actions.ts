@@ -1,6 +1,9 @@
 "use server";
 
 import { env } from "@/env";
+import { db } from "@/server/db";
+import { pushSubscriptions } from "@/server/db/schema";
+import { eq } from "drizzle-orm";
 import {
   setVapidDetails,
   sendNotification,
@@ -13,36 +16,59 @@ setVapidDetails(
   env.VAPID_PRIVATE_KEY,
 );
 
-let subscription: WebPushSubscription | null = null;
-
 export async function subscribeUser(sub: WebPushSubscription) {
-  subscription = sub;
   // In a production environment, you would want to store the subscription in a database
   // For example: await db.subscriptions.create({ data: sub })
-  return { success: true };
+  const [subRecord] = await db
+    .insert(pushSubscriptions)
+    .values({
+      subscriptionJson: JSON.stringify(sub),
+    })
+    .returning();
+
+  return subRecord
+    ? { success: true, subscriptionId: subRecord.id }
+    : { success: false, error: "Failed to subscribe user" };
 }
 
-export async function unsubscribeUser() {
-  subscription = null;
+export async function unsubscribeUser(subscriptionId: number) {
   // In a production environment, you would want to remove the subscription from the database
   // For example: await db.subscriptions.delete({ where: { ... } })
+  await db
+    .delete(pushSubscriptions)
+    .where(eq(pushSubscriptions.id, subscriptionId));
+
   return { success: true };
 }
 
 export async function sendPushNotification(message: string) {
-  if (!subscription) {
-    throw new Error("No subscription available");
-  }
+  const allSubscriptions = await db.select().from(pushSubscriptions);
 
   try {
-    await sendNotification(
-      subscription,
-      JSON.stringify({
-        title: "Test Notification",
-        body: message,
-        icon: "/icon.png",
+    await Promise.allSettled(
+      allSubscriptions.map(async (sub) => {
+        const subscription = JSON.parse(
+          JSON.stringify(sub.subscriptionJson),
+        ) as WebPushSubscription;
+        await sendNotification(
+          subscription,
+          JSON.stringify({
+            title: "Test Notification",
+            body: message,
+            icon: "/icon.png",
+          }),
+        );
       }),
     );
+
+    // await sendNotification(
+    //   subscription,
+    //   JSON.stringify({
+    //     title: "Test Notification",
+    //     body: message,
+    //     icon: "/icon.png",
+    //   }),
+    // );
     return { success: true };
   } catch (error) {
     console.error("Error sending push notification:", error);
