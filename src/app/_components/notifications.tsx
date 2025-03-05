@@ -145,20 +145,20 @@ export function InstallPrompt() {
   }
 
   return (
-    <div>
-      <h3>Install App</h3>
-      <button>Add to Home Screen</button>
+    <div className="rounded-lg bg-gray-100 p-4 shadow-md">
+      <h3 className="mb-2 text-lg font-semibold">Install App</h3>
+      <button className="mb-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600">
+        Add to Home Screen
+      </button>
       {isIOS && (
-        <p>
+        <p className="text-sm text-gray-600">
           To install this app on your iOS device, tap the share button
-          <span role="img" aria-label="share icon">
-            {" "}
-            ⎋{" "}
+          <span role="img" aria-label="share icon" className="mx-1">
+            ⎋
           </span>
           and then Add to Home Screen
-          <span role="img" aria-label="plus icon">
-            {" "}
-            ➕{" "}
+          <span role="img" aria-label="plus icon" className="mx-1">
+            ➕
           </span>
           .
         </p>
