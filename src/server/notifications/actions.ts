@@ -47,9 +47,7 @@ export async function sendPushNotification(message: string) {
   try {
     await Promise.allSettled(
       allSubscriptions.map(async (sub) => {
-        const subscription = JSON.parse(
-          JSON.stringify(sub.subscriptionJson),
-        ) as WebPushSubscription;
+        const subscription = sub.subscriptionJson as WebPushSubscription;
         await sendNotification(
           subscription,
           JSON.stringify({
