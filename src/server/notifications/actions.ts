@@ -53,7 +53,7 @@ export async function sendPushNotification(message: string) {
         await sendNotification(
           subscription,
           JSON.stringify({
-            title: "Test Notification",
+            title: "Notification",
             body: message,
             icon: "/icon.png",
           }),
